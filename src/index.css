@@ -1,0 +1,118 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 토스 스타일 디자인 시스템 - 타로 앱 */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 15% 13%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 13%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 13%;
+
+    /* 토스 블루 */
+    --primary: 217 100% 56%;
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 217 100% 96%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 15% 20%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 280 85% 65%;
+    --accent-foreground: 0 0% 100%;
+    --accent-soft: 280 85% 96%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 217 100% 56%;
+
+    --radius: 1rem;
+
+    /* 신비로운 그라데이션 */
+    --gradient-mystic: linear-gradient(135deg, hsl(280 85% 65%), hsl(217 100% 56%));
+    --gradient-card: linear-gradient(160deg, hsl(260 70% 25%), hsl(220 80% 15%));
+    --gradient-soft: linear-gradient(180deg, hsl(217 100% 98%), hsl(280 85% 98%));
+    --gradient-gold: linear-gradient(135deg, hsl(45 95% 65%), hsl(35 85% 55%));
+
+    /* 그림자 */
+    --shadow-card: 0 4px 24px -6px hsl(220 30% 20% / 0.08);
+    --shadow-elevated: 0 12px 32px -8px hsl(220 30% 20% / 0.12);
+    --shadow-mystic: 0 20px 60px -10px hsl(280 85% 50% / 0.35);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html, body {
+    font-family: 'Pretendard Variable', Pretendard, -apple-system, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.02em;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .bg-gradient-mystic { background: var(--gradient-mystic); }
+  .bg-gradient-card { background: var(--gradient-card); }
+  .bg-gradient-soft { background: var(--gradient-soft); }
+  .bg-gradient-gold { background: var(--gradient-gold); }
+  .shadow-card { box-shadow: var(--shadow-card); }
+  .shadow-elevated { box-shadow: var(--shadow-elevated); }
+  .shadow-mystic { box-shadow: var(--shadow-mystic); }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* 카드 플립 애니메이션 */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-spin-slow { animation: spin-slow 8s linear infinite; }
+
+/* 마크다운 결과 prose */
+.tarot-prose h2 { @apply text-xl font-bold mt-6 mb-3 text-foreground; }
+.tarot-prose h3 { @apply text-base font-bold mt-4 mb-2 text-primary; }
+.tarot-prose p { @apply text-[15px] leading-[1.75] text-foreground/85 mb-3; }
+.tarot-prose strong { @apply font-bold text-foreground; }
+.tarot-prose ul { @apply my-3 space-y-1.5 pl-1; }
+.tarot-prose li { @apply text-[15px] leading-[1.7] text-foreground/85 pl-4 relative; }
+.tarot-prose li::before { content: '•'; @apply absolute left-0 text-primary font-bold; }
+.tarot-prose blockquote { @apply border-l-4 border-primary/40 bg-primary-soft/50 px-4 py-3 my-4 rounded-r-xl text-[14px] italic text-foreground/80; }
