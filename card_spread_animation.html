@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>타로 카드 스프레드 시뮬레이션</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background: linear-gradient(135deg, #0a0e27 0%, #1a0a2e 50%, #16213e 100%);
+      font-family: 'EB Garamond', Georgia, serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #e8d5a3;
+      overflow: hidden;
+    }
+
+    /* 배경 별 효과 */
+    .stars {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .star {
+      position: absolute;
+      background: #c9a84c;
+      border-radius: 50%;
+      animation: twinkle 3s ease-in-out infinite;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 1; }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 1200px;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 48px;
+      margin-bottom: 10px;
+      color: #c9a84c;
+      text-shadow: 0 0 20px rgba(201, 168, 76, 0.5);
+      letter-spacing: 2px;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: #a88a5a;
+      margin-bottom: 40px;
+      font-style: italic;
+    }
+
+    /* 카드 스프레드 캔버스 */
+    .canvas-wrapper {
+      background: rgba(10, 14, 39, 0.8);
+      border: 2px solid #c9a84c;
+      border-radius: 12px;
+      padding: 30px;
+      margin: 30px 0;
+      box-shadow: 0 0 40px rgba(201, 168, 76, 0.2);
+      min-height: 500px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #spreadCanvas {
+      width: 100%;
+      max-width: 900px;
+      height: 500px;
+    }
+
+    /* 제어 버튼 */
+    .controls {
+      margin-top: 30px;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 14px;
+      background: linear-gradient(135deg, #c9a84c, #f0d080);
+      color: #0a0e27;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(201, 168, 76, 0.3);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.active {
+      background: linear-gradient(135deg, #7c3483, #a855a8);
+      color: #e8d5a3;
+    }
+
+    .spread-options {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .spread-btn {
+      padding: 8px 16px;
+      font-size: 12px;
+    }
+
+    .info-box {
+      background: rgba(201, 168, 76, 0.1);
+      border-left: 3px solid #c9a84c;
+      padding: 16px 20px;
+      margin-top: 20px;
+      border-radius: 6px;
+      text-align: left;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .info-box h3 {
+      color: #c9a84c;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .info-box p {
+      font-size: 13px;
+      color: #c9a84c;
+      line-height: 1.6;
+    }
+
+    /* 스타일 선택 */
+    .style-options {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    .style-btn {
+      padding: 8px 16px;
+      font-size: 12px;
+    }
+
+    .stats {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #a88a5a;
+    }
+    /* ✨ 스크롤 막대 스타일 (Webkit 브라우저) */
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(201, 168, 76, 0.08);
+      border-radius: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #c9a84c 0%, #f0d080 50%, #c9a84c 100%);
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(201, 168, 76, 0.4);
+      border: 2px solid rgba(201, 168, 76, 0.2);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #f0d080 0%, #c9a84c 50%, #f0d080 100%);
+      box-shadow: 0 0 20px rgba(201, 168, 76, 0.8);
+    }
+
+    ::-webkit-scrollbar-thumb:active {
+      background: linear-gradient(180deg, #c9a84c 0%, #d4a574 100%);
+    }
+
+    /* Firefox 스크롤 막대 */
+    * {
+      scrollbar-color: #c9a84c rgba(201, 168, 76, 0.1);
+      scrollbar-width: thin;
+    }
+
+    /* 컨테이너 스크롤 설정 */
+    body {
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="stars" id="starsContainer"></div>
+
+  <div class="container">
+    <h1>✦ 타로 카드 스프레드 시뮬레이션 ✦</h1>
+    <p class="subtitle">카드가 펼쳐지는 우아한 움직임</p>
+
+    <div class="style-options">
+      <button class="style-btn active" data-style="hand">🖐️ 손 스타일</button>
+      <button class="style-btn" data-style="cascade">💫 폭포식</button>
+      <button class="style-btn" data-style="orbital">🌀 궤도식</button>
+      <button class="style-btn" data-style="wave">〰️ 물결식</button>
+    </div>
+
+    <div class="spread-options">
+      <button class="spread-btn active" data-spread="three">과거/현재/미래</button>
+      <button class="spread-btn" data-spread="five">5카드 크로스</button>
+      <button class="spread-btn" data-spread="celtic">켈틱 크로스</button>
+      <button class="spread-btn" data-spread="nine">9카드</button>
+    </div>
+
+    <div class="canvas-wrapper">
+      <canvas id="spreadCanvas"></canvas>
+    </div>
+
+    <div class="controls">
+      <button id="playBtn">▶ 애니메이션 시작</button>
+      <button id="resetBtn">⟲ 초기화</button>
+      <button id="repeatBtn">🔄 반복</button>
+    </div>
+
+    <div class="info-box">
+      <h3>💡 스프레드 정보</h3>
+      <p id="spreadInfo">스타일을 선택하고 스프레드 버튼을 누르면 시뮬레이션이 시작됩니다. 각 카드가 우아하게 펼쳐지는 모습을 감상하세요.</p>
+    </div>
+
+    <div class="stats">
+      <p>프레임: <span id="fps">60</span> | 애니메이션: <span id="status">대기 중</span></p>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('spreadCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let animationState = {
+      style: 'hand',
+      spread: 'three',
+      isAnimating: false,
+      progress: 0,
+      cards: [],
+      fps: 60,
+      frameCount: 0,
+      lastTime: Date.now(),
+    };
+
+    // 캔버스 크기 설정
+    function resizeCanvas() {
+      const wrapper = canvas.parentElement;
+      canvas.width = wrapper.clientWidth - 40;
+      canvas.height = wrapper.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // 카드 데이터
+    const cardSuits = ['♠', '♥', '♦', '♣'];
+    const cardNames = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+    
+    function generateCards(count) {
+      const cards = [];
+      for (let i = 0; i < count; i++) {
+        cards.push({
+          suit: cardSuits[Math.floor(Math.random() * 4)],
+          name: cardNames[Math.floor(Math.random() * 13)],
+          id: i,
+        });
+      }
+      return cards;
+    }
+
+    // 스프레드 위치 계산
+    function getSpreadPositions(spread, style, progress) {
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const positions = [];
+
+      if (style === 'hand') {
+        return getHandStyle(spread, centerX, centerY, progress);
+      } else if (style === 'cascade') {
+        return getCascadeStyle(spread, centerX, centerY, progress);
+      } else if (style === 'orbital') {
+        return getOrbitalStyle(spread, centerX, centerY, progress);
+      } else if (style === 'wave') {
+        return getWaveStyle(spread, centerX, centerY, progress);
+      }
+
+      return positions;
+    }
+
+    // 손 스타일 (카드가 손에서 나와서 펼쳐짐)
+    function getHandStyle(spread, cx, cy, progress) {
+      const positions = [];
+      let count = 0;
+
+      if (spread === 'three') count = 3;
+      else if (spread === 'five') count = 5;
+      else if (spread === 'celtic') count = 10;
+      else if (spread === 'nine') count = 9;
+
+      const sourceX = cx - 150;
+      const sourceY = cy + 150;
+
+      for (let i = 0; i < count; i++) {
+        let targetX, targetY;
+        
+        if (spread === 'three') {
+          const spacing = 120;
+          targetX = cx - spacing + (i * spacing);
+          targetY = cy;
+        } else if (spread === 'five') {
+          const angles = [0, 90, 180, 270, 45].map(a => a * Math.PI / 180);
+          targetX = cx + Math.cos(angles[i]) * 120;
+          targetY = cy + Math.sin(angles[i]) * 120;
+        } else if (spread === 'celtic') {
+          const col = i % 2;
+          const row = Math.floor(i / 2);
+          targetX = cx - 150 + (col * 300);
+          targetY = cy - 180 + (row * 90);
+        } else if (spread === 'nine') {
+          const col = i % 3;
+          const row = Math.floor(i / 3);
+          targetX = cx - 150 + (col * 150);
+          targetY = cy - 150 + (row * 150);
+        }
+
+        const delay = i * 0.08;
+        const cardProgress = Math.max(0, Math.min(1, (progress - delay) / 0.4));
+
+        const easeProgress = cardProgress < 0.5 
+          ? 2 * cardProgress * cardProgress 
+          : -1 + (4 - 2 * cardProgress) * cardProgress;
+
+        const x = sourceX + (targetX - sourceX) * easeProgress;
+        const y = sourceY + (targetY - sourceY) * easeProgress;
+        const rotation = -30 + (easeProgress * 30);
+        const scale = 0.8 + (easeProgress * 0.2);
+
+        positions.push({
+          x, y, rotation, scale,
+          opacity: Math.min(1, easeProgress * 2),
+          index: i
+        });
+      }
+
+      return positions;
+    }
+
+    // 폭포식 스타일 (위에서 떨어지면서 배치)
+    function getCascadeStyle(spread, cx, cy, progress) {
+      const positions = [];
+      let count = spread === 'three' ? 3 : spread === 'five' ? 5 : spread === 'celtic' ? 10 : 9;
+
+      const sourceY = -100;
+      
+      for (let i = 0; i < count; i++) {
+        let targetX, targetY;
+        
+        if (spread === 'three') {
+          const spacing = 120;
+          targetX = cx - spacing + (i * spacing);
+          targetY = cy;
+        } else if (spread === 'five') {
+          const angles = [0, 90, 180, 270, 45].map(a => a * Math.PI / 180);
+          targetX = cx + Math.cos(angles[i]) * 120;
+          targetY = cy + Math.sin(angles[i]) * 120;
+        } else {
+          const col = i % 3;
+          const row = Math.floor(i / 3);
+          targetX = cx - 200 + (col * 200);
+          targetY = cy - 150 + (row * 120);
+        }
+
+        const delay = i * 0.06;
+        const cardProgress = Math.max(0, Math.min(1, (progress - delay) / 0.5));
+
+        const easeProgress = Math.sin(cardProgress * Math.PI / 2);
+
+        const x = targetX;
+        const y = sourceY + (targetY - sourceY) * easeProgress;
+        const rotation = Math.sin(cardProgress * Math.PI) * 20;
+        const scale = 0.7 + (easeProgress * 0.3);
+
+        positions.push({
+          x, y, rotation, scale,
+          opacity: easeProgress,
+          index: i
+        });
+      }
+
+      return positions;
+    }
+
+    // 궤도식 스타일 (원형으로 회전하며 배치)
+    function getOrbitalStyle(spread, cx, cy, progress) {
+      const positions = [];
+      let count = spread === 'three' ? 3 : spread === 'five' ? 5 : spread === 'celtic' ? 10 : 9;
+
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2 - Math.PI / 2;
+        const delay = i * 0.04;
+        const cardProgress = Math.max(0, Math.min(1, (progress - delay) / 0.5));
+
+        const radius = 180 * cardProgress;
+        const x = cx + Math.cos(angle) * radius;
+        const y = cy + Math.sin(angle) * radius;
+        const rotation = angle * (180 / Math.PI) + (cardProgress * 360);
+        const scale = cardProgress;
+
+        positions.push({
+          x, y, rotation, scale,
+          opacity: cardProgress,
+          index: i
+        });
+      }
+
+      return positions;
+    }
+
+    // 물결식 스타일 (물결처럼 펼쳐짐)
+    function getWaveStyle(spread, cx, cy, progress) {
+      const positions = [];
+      let count = spread === 'three' ? 3 : spread === 'five' ? 5 : spread === 'celtic' ? 10 : 9;
+
+      for (let i = 0; i < count; i++) {
+        let targetX, targetY;
+        
+        if (spread === 'three') {
+          const spacing = 120;
+          targetX = cx - spacing + (i * spacing);
+          targetY = cy;
+        } else if (spread === 'five') {
+          const angles = [0, 90, 180, 270, 45].map(a => a * Math.PI / 180);
+          targetX = cx + Math.cos(angles[i]) * 120;
+          targetY = cy + Math.sin(angles[i]) * 120;
+        } else {
+          const col = i % 3;
+          const row = Math.floor(i / 3);
+          targetX = cx - 200 + (col * 200);
+          targetY = cy - 150 + (row * 120);
+        }
+
+        const delay = i * 0.08;
+        const cardProgress = Math.max(0, Math.min(1, (progress - delay) / 0.4));
+
+        const wave = Math.sin(cardProgress * Math.PI) * 30;
+        const x = targetX;
+        const y = targetY - wave;
+        const rotation = -20 + (cardProgress * 20);
+        const scale = 0.8 + (cardProgress * 0.2);
+
+        positions.push({
+          x, y, rotation, scale,
+          opacity: cardProgress,
+          index: i
+        });
+      }
+
+      return positions;
+    }
+
+    // 카드 그리기
+    function drawCard(x, y, rotation, scale, opacity) {
+      ctx.save();
+      ctx.globalAlpha = opacity;
+      ctx.translate(x, y);
+      ctx.rotate(rotation * Math.PI / 180);
+      ctx.scale(scale, scale);
+
+      // 카드 배경
+      ctx.fillStyle = '#e8d5a3';
+      ctx.fillRect(-40, -60, 80, 120);
+
+      // 카드 테두리
+      ctx.strokeStyle = '#c9a84c';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-40, -60, 80, 120);
+
+      // 코너 장식
+      ctx.fillStyle = '#c9a84c';
+      ctx.fillRect(-38, -58, 4, 4);
+      ctx.fillRect(34, -58, 4, 4);
+      ctx.fillRect(-38, 54, 4, 4);
+      ctx.fillRect(34, 54, 4, 4);
+
+      // 중앙 심볼
+      ctx.fillStyle = '#d4a574';
+      ctx.font = 'bold 32px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('✦', 0, 0);
+
+      ctx.restore();
+    }
+
+    // 애니메이션 루프
+    function animate() {
+      const now = Date.now();
+      const deltaTime = now - animationState.lastTime;
+      animationState.lastTime = now;
+
+      // FPS 계산
+      animationState.frameCount++;
+      if (animationState.frameCount % 10 === 0) {
+        animationState.fps = Math.round(1000 / deltaTime);
+        document.getElementById('fps').textContent = animationState.fps;
+      }
+
+      // 배경 그리기
+      ctx.fillStyle = 'rgba(10, 14, 39, 0.9)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 별 그리기
+      ctx.fillStyle = '#c9a84c';
+      for (let i = 0; i < 20; i++) {
+        const x = (i * 100 + animationState.progress * 200) % canvas.width;
+        const y = Math.sin(i) * 20 + canvas.height / 2 + 150;
+        ctx.fillRect(x, y, 1, 1);
+      }
+
+      // 애니메이션 진행
+      if (animationState.isAnimating) {
+        animationState.progress += 0.01;
+        if (animationState.progress >= 1.5) {
+          animationState.isAnimating = false;
+          document.getElementById('status').textContent = '완료';
+          document.getElementById('playBtn').textContent = '▶ 애니메이션 시작';
+        }
+      }
+
+      // 카드 위치 계산 및 그리기
+      const positions = getSpreadPositions(
+        animationState.spread,
+        animationState.style,
+        animationState.progress
+      );
+
+      positions.forEach(pos => {
+        drawCard(pos.x, pos.y, pos.rotation, pos.scale, pos.opacity);
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    // 이벤트 리스너
+    document.getElementById('playBtn').addEventListener('click', () => {
+      animationState.isAnimating = true;
+      animationState.progress = 0;
+      document.getElementById('status').textContent = '실행 중';
+      document.getElementById('playBtn').textContent = '⏸ 중지';
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      animationState.isAnimating = false;
+      animationState.progress = 0;
+      document.getElementById('status').textContent = '대기 중';
+      document.getElementById('playBtn').textContent = '▶ 애니메이션 시작';
+    });
+
+    document.getElementById('repeatBtn').addEventListener('click', () => {
+      animationState.progress = 0;
+      animationState.isAnimating = true;
+      document.getElementById('status').textContent = '반복 중';
+    });
+
+    document.querySelectorAll('.style-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        animationState.style = e.target.dataset.style;
+        animationState.progress = 0;
+        animationState.isAnimating = false;
+      });
+    });
+
+    document.querySelectorAll('.spread-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.spread-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        animationState.spread = e.target.dataset.spread;
+        animationState.progress = 0;
+        animationState.isAnimating = false;
+
+        // 정보 업데이트
+        const info = {
+          three: '과거, 현재, 미래의 흐름을 보여주는 가장 인기 있는 스프레드입니다.',
+          five: '중심 상황과 주변 영향을 종합적으로 분석하는 스프레드입니다.',
+          celtic: '가장 복잡하고 심층적인 켈틱 크로스 스프레드입니다.',
+          nine: '9개의 위치로 상황을 세밀하게 분석합니다.'
+        };
+        document.getElementById('spreadInfo').textContent = info[animationState.spread] || '';
+      });
+    });
+
+    // 초기 카드 생성 및 애니메이션 시작
+    animationState.cards = generateCards(10);
+
+    // 애니메이션 시작
+    animate();
+  </script>
+</body>
+</html>
